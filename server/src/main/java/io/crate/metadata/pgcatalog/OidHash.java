@@ -29,10 +29,12 @@ import io.crate.metadata.RelationInfo;
 import io.crate.metadata.RelationName;
 import io.crate.metadata.functions.Signature;
 import io.crate.replication.logical.metadata.Publication;
+import io.crate.replication.logical.metadata.Subscription;
 import io.crate.types.TypeSignature;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.apache.lucene.util.StringHelper.murmurhash3_x86_32;
 
@@ -47,7 +49,9 @@ public final class OidHash {
         PROC,
         INDEX,
         USER,
-        PUBLICATION;
+        PUBLICATION,
+        SUBSCRIPTION,
+        HOST;
 
         public static Type fromRelationType(RelationInfo.RelationType type) {
             return switch (type) {
@@ -71,6 +75,10 @@ public final class OidHash {
         return oid(type.toString() + name.fqn());
     }
 
+    public static int relationOid(Type type, String fqn) {
+        return oid(type.toString() + fqn);
+    }
+
     public static int schemaOid(String name) {
         return oid(Type.SCHEMA.toString() + name);
     }
@@ -92,6 +100,16 @@ public final class OidHash {
     public static int publicationOid(String name, Publication publication) {
         var tables = Lists2.joinOn(" ", publication.tables(), RelationName::fqn);
         return oid(Type.PUBLICATION + name + publication.owner() + tables);
+    }
+
+    public static int subscriptionOid(String name, Subscription subscription) {
+        var publications = subscription.publications().stream().collect(Collectors.joining(","));
+        return oid(Type.SUBSCRIPTION + name + subscription.owner() + publications);
+    }
+
+    public static int subscriptionHostsOid(String name, Subscription subscription) {
+        var hosts = subscription.connectionInfo().hosts().stream().collect(Collectors.joining(","));
+        return oid(Type.HOST + name + hosts);
     }
 
     public static int userOid(String name) {
