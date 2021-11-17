@@ -78,6 +78,9 @@ final class Netty4MessageChannelHandler extends ChannelDuplexHandler {
         final BytesReference wrapped = Netty4Utils.toBytesReference(buffer);
         try (ReleasableBytesReference reference = new ReleasableBytesReference(wrapped, buffer::release)) {
             pipeline.handleBytes(channel, reference);
+        } catch (IllegalStateException e) {
+            //channel.sendMessage(reference, listener);
+            throw e;
         }
     }
 
