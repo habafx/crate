@@ -223,7 +223,7 @@ public class LogicalReplicationITest extends LogicalReplicationIntegrationTest {
                 " JOIN pg_subscription_rel sr ON s.oid = sr.srsubid" +
                 " ORDER BY s.subname");
         assertThat(printedTable(systemTableResponse.rows()),
-            is("530917412| sub1| crate| true| true| false| NULL| NULL| [pub1]| 530917412| 1621733093| r\n"));
+            is("530917412| sub1| crate| true| true| false| NULL| NULL| [pub1]| 530917412| 1621733093| NULL\n"));
 
         executeOnSubscriber("REFRESH TABLE doc.t1");
         var response = executeOnSubscriber("SELECT * FROM doc.t1 ORDER BY id");

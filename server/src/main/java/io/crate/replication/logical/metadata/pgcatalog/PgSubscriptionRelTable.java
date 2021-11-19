@@ -42,7 +42,7 @@ public class PgSubscriptionRelTable {
         return SystemTable.<PgSubscriptionRelTable.PgSubscriptionRelRow>builder(IDENT)
             .add("srsubid", INTEGER, r -> r.subOid())
             .add("srrelid", REGCLASS, r -> r.relOid())
-            .add("srsubstate", STRING, ignored -> "r")
+            .add("srsubstate", STRING, ignored -> null)
             .build();
     }
 

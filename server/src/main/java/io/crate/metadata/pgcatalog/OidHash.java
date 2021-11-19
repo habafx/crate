@@ -107,11 +107,6 @@ public final class OidHash {
         return oid(Type.SUBSCRIPTION + name + subscription.owner() + publications);
     }
 
-    public static int subscriptionHostsOid(String name, Subscription subscription) {
-        var hosts = String.join(",", subscription.connectionInfo().hosts());
-        return oid(Type.HOST + name + hosts);
-    }
-
     public static int userOid(String name) {
         return oid(Type.USER + name);
     }
