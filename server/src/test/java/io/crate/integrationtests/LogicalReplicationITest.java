@@ -214,21 +214,29 @@ public class LogicalReplicationITest extends LogicalReplicationIntegrationTest {
         createPublication("pub1", false, List.of("doc.t1"));
 
         createSubscription("sub1", "pub1");
-        // s.subdbid and s.subconninfo are not being selected since
-        // they are different from run to run due to different port in host.
-        var systemTableResponse = executeOnSubscriber(
-            "SELECT s.oid, s.subname, s.subowner, s.subenabled, s.subbinary, s.substream, s.subslotname, s.subsynccommit, s.subpublications, " +
-                " sr.srsubid, sr.srrelid, sr.srsubstate" +
-                " FROM pg_subscription s" +
-                " JOIN pg_subscription_rel sr ON s.oid = sr.srsubid" +
-                " ORDER BY s.subname");
-        assertThat(printedTable(systemTableResponse.rows()),
-            is("530917412| sub1| crate| true| true| false| NULL| NULL| [pub1]| 530917412| 1621733093| NULL\n"));
 
         executeOnSubscriber("REFRESH TABLE doc.t1");
         var response = executeOnSubscriber("SELECT * FROM doc.t1 ORDER BY id");
         assertThat(printedTable(response.rows()), is("1\n" +
                                                      "2\n"));
+    }
+
+    @Test
+    public void test_create_subscription__system_tables_filled() throws Exception {
+        executeOnPublisher("CREATE TABLE doc.t1 (id INT) WITH(" + defaultTableSettings() + ")");
+        createPublication("pub1", false, List.of("doc.t1"));
+        createSubscription("sub1", "pub1");
+
+        // s.subconninfo is not being selected since
+        // it's different from run to run due to different port in host.
+        var systemTableResponse = executeOnSubscriber(
+            "SELECT s.oid, s.subdbid, s.subname, s.subowner, s.subenabled, s.subbinary, s.substream, s.subslotname, s.subsynccommit, s.subpublications, " +
+                " sr.srsubid, sr.srrelid, sr.srsubstate" +
+                " FROM pg_subscription s" +
+                " JOIN pg_subscription_rel sr ON s.oid = sr.srsubid" +
+                " ORDER BY s.subname");
+        assertThat(printedTable(systemTableResponse.rows()),
+            is("530917412| 0| sub1| crate| true| true| false| NULL| NULL| [pub1]| 530917412| 1621733093| NULL\n"));
     }
 
     @Test
