@@ -55,10 +55,7 @@ public class PgSubscriptionRelTable {
                         sub.publications().forEach(tableName ->
                             c.accept(
                                 new PgSubscriptionRelTable.PgSubscriptionRelRow(
-                                    OidHash.subscriptionOid(e.getKey(), sub), // subOid must be computed in the same way as PgSubscriptionTable.oid
-                                    // relOid must be computed in the same way as PgClassTable.oid.
-                                    // Regclass.relationOid is not used here in order not to create intermediate RelationInfo instance with TYPE='TABLE'
-                                    // and also reflect the fact that sub.publications already contains fqn-s
+                                    OidHash.subscriptionOid(e.getKey(), sub),
                                     new Regclass(
                                         OidHash.relationOid(
                                             OidHash.Type.TABLE,
