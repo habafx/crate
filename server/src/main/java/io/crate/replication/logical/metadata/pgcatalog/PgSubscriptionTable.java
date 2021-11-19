@@ -54,15 +54,7 @@ public class PgSubscriptionTable {
             .build();
     }
 
-    public static class SubscriptionRow {
-        private final String name;
-        private final Subscription subscription;
-
-        public SubscriptionRow(String name, Subscription subscription) {
-            this.name = name;
-            this.subscription = subscription;
-        }
-
+    public record SubscriptionRow(String name, Subscription subscription) {
         public String owner() {
             return subscription.owner();
         }

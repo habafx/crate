@@ -73,29 +73,5 @@ public class PgSubscriptionRelTable {
         };
     }
 
-    public static class PgSubscriptionRelRow {
-        private final int subOid;
-        private final Regclass relOid;
-        private final String owner;
-
-        public PgSubscriptionRelRow(int subOid,
-                                    Regclass relOid,
-                                    String owner) {
-            this.subOid = subOid;
-            this.relOid = relOid;
-            this.owner = owner;
-        }
-
-        public String owner() {
-            return owner;
-        }
-
-        public int subOid() {
-            return subOid;
-        }
-
-        public Regclass relOid() {
-            return relOid;
-        }
-    }
+    public record PgSubscriptionRelRow(int subOid, Regclass relOid, String owner) {}
 }
