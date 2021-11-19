@@ -140,15 +140,18 @@ public final class MetadataTracker implements Closeable {
                 clusterService.submitStateUpdateTask("track-metadata", new ClusterStateUpdateTask() {
                     @Override
                     public ClusterState execute(ClusterState localClusterState) throws Exception {
-                        var result = updateMetadata(subscriptionName, localClusterState, remoteClusterState);
-                        countDown.onSuccess();
-                        return result;
+                        return updateMetadata(subscriptionName, localClusterState, remoteClusterState);
                     }
 
                     @Override
                     public void onFailure(String source, Exception e) {
-                        LOGGER.error(e);
+                        LOGGER.error("Tracking metadata failed for subscription {} {}", subscriptionName, e);
                         countDown.onFailure(e);
+                    }
+
+                    @Override
+                    public void clusterStateProcessed(String source, ClusterState oldState, ClusterState newState) {
+                        countDown.onSuccess();
                     }
                 });
             });
