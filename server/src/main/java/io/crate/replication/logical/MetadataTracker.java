@@ -23,6 +23,7 @@ package io.crate.replication.logical;
 
 import io.crate.common.annotations.VisibleForTesting;
 import io.crate.common.unit.TimeValue;
+import io.crate.concurrent.CountdownFutureCallback;
 import io.crate.execution.support.RetryRunnable;
 import io.crate.metadata.RelationName;
 import io.crate.replication.logical.metadata.PublicationsMetadata;
@@ -95,12 +96,14 @@ public final class MetadataTracker implements Closeable {
     }
 
     private void schedule() {
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Reschedule tracking metadata");
+        }
         cancellable = threadPool.schedule(
             this::run,
             pollDelay,
             ThreadPool.Names.LOGICAL_REPLICATION
         );
-        isActive = true;
     }
 
     public boolean startTracking(String subscriptionName) {
@@ -128,6 +131,7 @@ public final class MetadataTracker implements Closeable {
     }
 
     private void run() {
+        var countDown = new CountdownFutureCallback(subscriptionsToTrack.size());
         for (String subscriptionName : subscriptionsToTrack) {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Start tracking metadata for subscription {}", subscriptionName);
@@ -136,23 +140,31 @@ public final class MetadataTracker implements Closeable {
                 clusterService.submitStateUpdateTask("track-metadata", new ClusterStateUpdateTask() {
                     @Override
                     public ClusterState execute(ClusterState localClusterState) throws Exception {
-                        return updateMetadata(subscriptionName, localClusterState, remoteClusterState);
+                        var result = updateMetadata(subscriptionName, localClusterState, remoteClusterState);
+                        countDown.onSuccess();
+                        return result;
                     }
 
                     @Override
                     public void onFailure(String source, Exception e) {
                         LOGGER.error(e);
+                        countDown.onFailure(e);
                     }
                 });
             });
         }
-        if (isActive) {
-            schedule();
-        }
+        countDown.thenRun(() -> {
+            if (isActive) {
+                schedule();
+            }
+        });
     }
 
     @VisibleForTesting
     static ClusterState updateMetadata(String subscriptionName, ClusterState subscriberClusterState, ClusterState publisherClusterState) {
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Process cluster state for subscription {}", subscriptionName);
+        }
         PublicationsMetadata publicationsMetadata = publisherClusterState.metadata().custom(PublicationsMetadata.TYPE);
         SubscriptionsMetadata subscriptionsMetadata = subscriberClusterState.metadata().custom(SubscriptionsMetadata.TYPE);
         if (publicationsMetadata == null || subscriptionsMetadata == null) {
