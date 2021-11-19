@@ -41,7 +41,7 @@ public class PgSubscriptionTable {
     public static SystemTable<SubscriptionRow> create() {
         return SystemTable.<SubscriptionRow>builder(IDENT)
             .add("oid", INTEGER, r -> OidHash.subscriptionOid(r.name, r.subscription))
-            .add("subdbid", INTEGER, r -> OidHash.subscriptionHostsOid(r.name, r.subscription))
+            .add("subdbid", INTEGER, ignored -> 0)
             .add("subname", STRING, r -> r.name)
             .add("subowner", STRING, r -> r.subscription.owner())
             .add("subenabled", BOOLEAN, r -> true)
