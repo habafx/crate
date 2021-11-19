@@ -108,7 +108,7 @@ public final class OidHash {
     }
 
     public static int subscriptionHostsOid(String name, Subscription subscription) {
-        var hosts = subscription.connectionInfo().hosts().stream().collect(Collectors.joining(","));
+        var hosts = String.join(",", subscription.connectionInfo().hosts());
         return oid(Type.HOST + name + hosts);
     }
 
